@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dispute Desk</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #1c2330; --muted: #5d6878; --border: #dde2e9;
+  --track: #e8ebf0; --accent: #2f6fdb; --good: #11804f; --good-soft: #e3f5ec;
+  --warn: #8a5a00; --warn-soft: #fff4dc; --bad: #b42318; --bad-soft: #fde8e6;
+  --s1: #2f6fdb; --s2: #11804f; --s3: #b26a00; --s4: #8e44ad; --s5: #c0392b; --s6: #16808a;
+  --radius: 10px; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #11151c; --panel: #181e27; --text: #e6eaf0; --muted: #9aa5b5; --border: #2a3340;
+    --track: #232b37; --accent: #6c9cf0; --good: #4ccb8f; --good-soft: #15302a;
+    --warn: #f3c46b; --warn-soft: #3a2e14; --bad: #ff8a7a; --bad-soft: #3b1d1b;
+    --s1: #6c9cf0; --s2: #4ccb8f; --s3: #f3c46b; --s4: #c39bd3; --s5: #ff8a7a; --s6: #5fd0d8;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+body { margin: 0; background: var(--bg); color: var(--text); font-size: 14px; }
+header { padding: 14px 24px; display: flex; align-items: center; gap: 10px 18px; flex-wrap: wrap; border-bottom: 1px solid var(--border); background: var(--panel); }
+h1 { font-size: 18px; margin: 0; }
+nav { display: flex; gap: 14px; flex-wrap: wrap; }
+nav a { color: var(--muted); text-decoration: none; font-weight: 600; }
+nav a.on { color: var(--accent); }
+.grow { flex: 1; }
+h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+h3 { margin: 0 0 4px; font-size: 18px; overflow-wrap: anywhere; }
+.muted { color: var(--muted); }
+main { padding: 16px 24px 32px; display: grid; gap: 16px; grid-template-columns: repeat(12, minmax(0, 1fr)); max-width: 1500px; }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
+.c12 { grid-column: span 12; } .c8 { grid-column: span 8; } .c7 { grid-column: span 7; } .c6 { grid-column: span 6; } .c5 { grid-column: span 5; } .c4 { grid-column: span 4; } .c3 { grid-column: span 3; }
+@media (max-width: 900px) { .c8, .c7, .c6, .c5, .c4 { grid-column: span 12; } .c3 { grid-column: span 6; } main { padding: 12px 16px; } header { padding: 12px 16px; } }
+@media (max-width: 600px) { .hide-sm { display: none; } nav { flex-basis: 100%; order: 3; } .kpi .v { font-size: 22px; } main { gap: 12px; } }
+.kpi .v { font-size: 26px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.kpi .l { color: var(--muted); margin-top: 2px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--border); white-space: nowrap; }
+td.wrap { white-space: normal; min-width: 180px; }
+th { color: var(--muted); font-weight: 600; border-top: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.click { cursor: pointer; } tr.click:hover td { background: var(--track); }
+.scroll { overflow-x: auto; max-width: 100%; }
+.chip { font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--track); color: var(--muted); display: inline-block; }
+.chip.bad { background: var(--bad-soft); color: var(--bad); } .chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.good { background: var(--good-soft); color: var(--good); }
+.pbar { display: inline-block; width: 60px; height: 8px; background: var(--track); border-radius: 4px; vertical-align: middle; margin-right: 6px; overflow: hidden; }
+.pbar > div { height: 100%; }
+.bars .row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 56px; gap: 8px; align-items: center; padding: 4px 0; }
+.bars .track { position: relative; height: 12px; background: var(--track); border-radius: 3px; }
+.bars .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--muted); }
+.bars .fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.kv { display: grid; grid-template-columns: minmax(110px, 160px) minmax(0, 1fr); gap: 4px 10px; }
+.kv div { overflow-wrap: anywhere; }
+.kv div:nth-child(odd) { color: var(--muted); }
+select, button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; max-width: 100%; }
+button { cursor: pointer; background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+button.ghost { background: transparent; color: var(--accent); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.msg { padding: 8px 10px; border-radius: 6px; margin-top: 8px; overflow-wrap: anywhere; }
+.msg.err { background: var(--bad-soft); color: var(--bad); } .msg.ok { background: var(--good-soft); color: var(--good); }
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+.check { display: grid; grid-template-columns: 34px 22px minmax(0, 1fr); gap: 4px 8px; padding: 8px 0; border-top: 1px solid var(--border); }
+.check .id { color: var(--muted); font-variant-numeric: tabular-nums; }
+.check .fact { grid-column: 3; color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
+.dot { width: 14px; height: 14px; border-radius: 50%; margin-top: 2px; }
+.dot.ok { background: var(--good); } .dot.no { background: var(--bad-soft); border: 2px solid var(--bad); }
+svg { display: block; width: 100%; height: auto; }
+svg text { fill: var(--muted); font-size: 11px; }
+svg .grid { stroke: var(--border); }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.letter p { margin: 0 0 10px; line-height: 1.5; overflow-wrap: anywhere; }
+.letter .cite { color: var(--muted); font-size: 12px; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Dispute Desk</h1>
+  <span class="muted">Brightgate Tickets, synthetic data</span>
+  <nav class="grow"><a href="#/queue" id="nav-queue">Queue</a><a href="#/analytics" id="nav-analytics">Analytics</a><a href="#/policy" id="nav-policy">Policy</a></nav>
+  <span class="chip" id="today"></span>
+  <label class="muted">Analyst <select id="analyst"></select></label>
+</header>
+<main id="app"></main>
+<script>
+const USERS = ["r.moreno", "k.osei", "t.lindqvist"];
+const NEXT = {received: ["under_review", "accepted"], under_review: ["represented", "accepted"], represented: ["won", "lost", "pre_arbitration"], pre_arbitration: ["won", "lost", "accepted"]};
+const SHORT_REASON = {fraud: "fraud", not_received: "not recvd", not_as_described: "not as desc", duplicate: "duplicate", credit_not_processed: "credit", canceled_recurring: "recurring"};
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const money = (v) => (v < 0 ? "-$" : "$") + Math.abs(Number(v)).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+const money0 = (v) => (v < 0 ? "-$" : "$") + Math.abs(Number(v)).toLocaleString(undefined, {maximumFractionDigits: 0});
+const pct = (v, d = 1) => v == null ? "n/a" : (100 * v).toFixed(d) + "%";
+const num = (v) => Number(v).toLocaleString(undefined, {maximumFractionDigits: 0});
+function analyst() { try { return localStorage.getItem("analyst") || USERS[0]; } catch { return USERS[0]; } }
+const sel = $("#analyst");
+sel.innerHTML = USERS.map((u) => `<option ${u === analyst() ? "selected" : ""}>${u}</option>`).join("");
+sel.onchange = () => { try { localStorage.setItem("analyst", sel.value); } catch {} };
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, {...opts, headers: {"content-type": "application/json", "x-analyst": sel.value, ...(opts.headers || {})}});
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(body.error || body.detail || r.statusText); e.body = body; throw e; }
+  return body;
+}
+function statusChip(s) {
+  const cls = {received: "warn", under_review: "warn", represented: "", pre_arbitration: "bad", won: "good", lost: "bad", accepted: ""}[s] || "";
+  return `<span class="chip ${cls}">${esc(s.replace("_", " "))}</span>`;
+}
+function daysChip(n) {
+  if (n == null) return "";
+  const cls = n <= 2 ? "bad" : n <= 5 ? "warn" : "";
+  return `<span class="chip ${cls}">${n} bd</span>`;
+}
+function pbar(p) {
+  const c = p >= 0.6 ? "--good" : p >= 0.35 ? "--warn" : "--bad";
+  return `<span class="pbar"><div style="width:${(p * 100).toFixed(0)}%;background:var(${c})"></div></span>${pct(p, 0)}`;
+}
+function recChip(r) { return r === "represent" ? `<span class="chip good">represent</span>` : `<span class="chip">accept</span>`; }
+
+// Charts: one y-axis each.
+function niceMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
+function lineChart({labels, series, refs = [], fmt = (v) => v, height = 240}) {
+  const W = 640, H = height, L = 52, R = 24, T = 12, B = 28;
+  const all = series.flatMap((s) => s.values).concat(refs.map((r) => r.value));
+  const max = niceMax(Math.max(...all) * 1.05);
+  const x = (i) => L + (labels.length === 1 ? 0 : i * (W - L - R) / (labels.length - 1));
+  const y = (v) => T + (H - T - B) * (1 - v / max);
+  let g = "";
+  for (let k = 0; k <= 4; k++) { const v = max * k / 4; g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`; }
+  labels.forEach((l, i) => { if (labels.length < 8 || i % 2 === 0) g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${esc(l)}</text>`; });
+  refs.forEach((r) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(r.value)}" y2="${y(r.value)}" stroke="var(${r.color})" stroke-dasharray="5 4" stroke-width="1.5"/>`; });
+  series.forEach((s) => {
+    g += `<polyline fill="none" stroke="var(${s.color})" stroke-width="2.5" points="${s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}"/>`;
+    s.values.forEach((v, i) => { g += `<circle cx="${x(i)}" cy="${y(v)}" r="3.5" fill="var(${(s.pointColor && s.pointColor(i)) || s.color})"><title>${esc(labels[i])}: ${fmt(v)}</title></circle>`; });
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+function barChart({labels, series, fmt = (v) => v, height = 240}) {
+  const W = 640, H = height, L = 64, R = 12, T = 12, B = 30;
+  const all = series.flatMap((s) => s.values);
+  const min = Math.min(0, ...all), maxv = Math.max(0, ...all);
+  const max = niceMax(maxv * 1.05), lo = min < 0 ? -niceMax(-min * 1.05) : 0;
+  const y = (v) => T + (H - T - B) * (max - v) / (max - lo);
+  const gw = (W - L - R) / labels.length, bw = Math.min(40, (gw - 8) / series.length);
+  let g = "";
+  for (let k = 0; k <= 4; k++) { const v = lo + (max - lo) * k / 4; g += `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`; }
+  labels.forEach((l, i) => {
+    const cx = L + gw * i + gw / 2;
+    g += `<text x="${cx}" y="${H - 10}" text-anchor="middle">${esc(l)}</text>`;
+    series.forEach((s, j) => {
+      const v = s.values[i], x0 = cx - (bw * series.length) / 2 + j * bw;
+      g += `<rect x="${x0 + 1}" y="${Math.min(y(v), y(0))}" width="${bw - 2}" height="${Math.abs(y(v) - y(0))}" fill="var(${s.color})" rx="2"><title>${esc(l)} ${esc(s.name)}: ${fmt(v)}</title></rect>`;
+    });
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+const legend = (items) => `<div class="legend">${items.map(([n, c, dash]) => `<span><i style="background:var(${c});${dash ? "height:2px;vertical-align:3px" : ""}"></i>${esc(n)}</span>`).join("")}</div>`;
+
+let q = {status: "open", sort: "deadline", category: ""};
+async function renderQueue() {
+  const p = new URLSearchParams({status: q.status, sort: q.sort, limit: 100});
+  if (q.category) p.set("category", q.category);
+  const d = await api("/api/queue?" + p);
+  $("#today").textContent = "Today " + d.today;
+  const opt = (v, cur, label) => `<option value="${v}" ${v === cur ? "selected" : ""}>${label}</option>`;
+  const cats = ["fraud", "not_received", "not_as_described", "duplicate", "credit_not_processed", "canceled_recurring"];
+  const open = d.items.filter((r) => ["received", "under_review"].includes(r.status));
+  const fightEv = open.filter((r) => r.recommendation === "represent").reduce((a, r) => a + r.ev, 0);
+  $("#app").innerHTML = `
+  <section class="panel c3 kpi"><div class="v">${num(d.total)}</div><div class="l">disputes in this view</div></section>
+  <section class="panel c3 kpi"><div class="v">${num(open.filter((r) => r.days_left != null && r.days_left <= 5).length)}</div><div class="l">due in 5 business days or less</div></section>
+  <section class="panel c3 kpi"><div class="v">${num(open.filter((r) => r.recommendation === "represent").length)}</div><div class="l">recommended to represent</div></section>
+  <section class="panel c3 kpi"><div class="v">${money0(fightEv)}</div><div class="l">expected value of those fights</div></section>
+  <section class="panel c12">
+    <h2>Dispute queue, sorted by ${q.sort === "deadline" ? "deadline, then expected value" : "expected value"}</h2>
+    <div class="filters">
+      <select id="f-status">${["open", "received", "under_review", "represented", "pre_arbitration", "won", "lost", "accepted", "all"].map((s) => opt(s, q.status, s.replace("_", " "))).join("")}</select>
+      <select id="f-sort">${opt("deadline", q.sort, "Sort by deadline")}${opt("ev", q.sort, "Sort by expected value")}</select>
+      <select id="f-cat">${opt("", q.category, "All reasons")}${cats.map((c) => opt(c, q.category, c.replaceAll("_", " "))).join("")}</select>
+    </div>
+    <div class="scroll"><table>
+      <tr><th>Dispute</th><th>Deadline</th><th>Status</th><th class="num">Amount</th><th>Reason</th><th class="hide-sm">Product</th><th>P(win)</th><th class="num">EV</th><th>Model says</th></tr>
+      ${d.items.map((r) => `<tr class="click" data-id="${esc(r.dispute_id)}">
+        <td>${esc(r.dispute_id)}</td><td>${esc(r.deadline || "")} ${daysChip(r.days_left)}</td><td>${statusChip(r.status)}</td>
+        <td class="num">${money(r.amount)}</td><td>${esc(r.reason_code)} <span class="muted">${esc(r.category_label)}</span></td>
+        <td class="hide-sm">${esc(r.product.replace("_", " "))}</td><td>${pbar(r.p_win)}</td><td class="num">${money(r.ev)}</td>
+        <td>${recChip(r.recommendation)}${r.liability_rule ? ` <span class="chip good">${esc(r.liability_rule)}</span>` : ""}</td></tr>`).join("")}
+    </table></div>
+    ${d.total > d.items.length ? `<p class="muted">Showing the first ${d.items.length} of ${num(d.total)}.</p>` : ""}
+  </section>`;
+  $("#f-status").onchange = (e) => { q.status = e.target.value; renderQueue(); };
+  $("#f-sort").onchange = (e) => { q.sort = e.target.value; renderQueue(); };
+  $("#f-cat").onchange = (e) => { q.category = e.target.value; renderQueue(); };
+  document.querySelectorAll("tr.click").forEach((tr) => tr.onclick = () => location.hash = "#/dispute/" + tr.dataset.id);
+}
+
+async function renderDispute(id) {
+  const d = await api("/api/disputes/" + encodeURIComponent(id));
+  const dec = d.decision, st = d.state, o = d.order, c = d.completeness;
+  const maxEff = Math.max(0.05, ...dec.reasons.map((r) => Math.abs(r.effect)));
+  const reasons = dec.reasons.length ? dec.reasons.map((r) => {
+    const w = 50 * Math.abs(r.effect) / maxEff, pos = r.effect > 0;
+    return `<div class="row"><div>${esc(r.label)}</div><div class="track"><div class="mid"></div><div class="fill" style="${pos ? `left:50%` : `left:${50 - w}%`};width:${w}%;background:var(${pos ? "--good" : "--bad"})"></div></div><div class="num muted">${pos ? "+" : ""}${(100 * r.effect).toFixed(1)} pt</div></div>`;
+  }).join("") : `<p class="muted">No single piece of evidence moves the estimate by more than half a point.</p>`;
+  const nexts = NEXT[st.status] || [];
+  const letter = d.letter;
+  $("#app").innerHTML = `
+  <section class="panel c12">
+    <div class="actions"><a href="#/queue">Queue</a><span class="muted">/</span><span>${esc(d.dispute.dispute_id)}</span></div>
+    <h3 style="margin-top:8px">${esc(d.dispute.reason_code)}: ${esc(d.dispute.category_label)}, ${money(d.dispute.amount)}</h3>
+    <div class="muted">Network ${esc(d.dispute.network)}, order ${o.txn_id} on ${esc(o.ts)}, received ${esc(d.dispute.received_date)}. ${statusChip(st.status)} ${st.deadline ? `Deadline ${esc(st.deadline)} ${daysChip(st.days_left)}` : ""}</div>
+  </section>
+  <section class="panel c3 kpi"><div class="v">${pct(dec.p_win, 0)}</div><div class="l">win probability${dec.p_win !== dec.p_model ? ` (model ${pct(dec.p_model, 0)}, floor from ${esc(dec.liability.rule_id)})` : ""}</div></section>
+  <section class="panel c3 kpi"><div class="v">${money(dec.expected_value)}</div><div class="l">expected value of fighting</div></section>
+  <section class="panel c3 kpi"><div class="v">${pct(dec.breakeven_p, 0)}</div><div class="l">break-even win probability</div></section>
+  <section class="panel c3 kpi"><div class="v">${recChip(dec.recommendation)}</div><div class="l">${esc(dec.liability.explanation)}</div></section>
+  <section class="panel c7">
+    <h2>Evidence checklist</h2>
+    <div class="muted" style="margin-bottom:6px">Required: ${c.required_available} of ${c.required_total} available (${esc(c.rule)}), ${c.required_met ? `<span class="chip good">met</span>` : `<span class="chip bad">not met</span>`}. Helpful items available: ${c.helpful_available}.</div>
+    ${d.evidence.map((i) => `<div class="check"><div class="id">${esc(i.id)}</div><div class="dot ${i.available ? "ok" : "no"}" title="${i.available ? "available" : "missing"}"></div><div><b>${esc(i.label)}</b> <span class="chip">${esc(i.role)}</span></div><div class="fact">${esc(i.fact)}</div></div>`).join("")}
+  </section>
+  <section class="panel c5">
+    <h2>Why this win probability</h2>
+    <div class="muted" style="margin-bottom:6px">Change in P(win) if that evidence were missing.</div>
+    <div class="bars">${reasons}</div>
+    <h2 style="margin-top:18px">Order facts</h2>
+    <div class="kv">
+      <div>Product</div><div>${esc(o.product.replace("_", " "))} (${esc(o.product_type)}), ${esc(o.channel)}</div>
+      <div>3-D Secure</div><div>${esc(o.three_ds)}</div>
+      <div>AVS / CVV</div><div>${esc(o.avs)} / ${o.cvv_match ? "match" : "no match"}</div>
+      <div>IP</div><div>${esc(o.ip_country)}, ${num(o.ip_distance_km)} km from billing</div>
+      <div>Device</div><div>${esc(o.device_id)}</div>
+      ${o.product_type === "merch" ? `<div>Shipping</div><div>${esc(o.tracking.replace("_", " "))}, ${o.ship_bill_match ? "billing address" : "different address"}</div>` : ""}
+      ${o.product_type === "ticket" ? `<div>Event</div><div>${esc(o.event_ts)}${o.gate ? `, gate ${esc(o.gate)}` : ""}</div>` : ""}
+    </div>
+  </section>
+  <section class="panel c7">
+    <h2>Rebuttal letter and packet</h2>
+    <div class="actions">
+      <button id="draft">Draft letter (template)</button>
+      <button class="ghost" id="draft-claude" title="Needs ANTHROPIC_API_KEY on the server">Draft with Claude</button>
+      <a href="/api/disputes/${encodeURIComponent(id)}/packet.html" target="_blank" rel="noopener">Open packet page</a>
+      <a href="/api/disputes/${encodeURIComponent(id)}/packet" target="_blank" rel="noopener">Packet JSON</a>
+    </div>
+    <div id="letter-msg"></div>
+    ${letter ? `<div class="letter" style="margin-top:12px">${letter.paragraphs.map((p) => `<p>${esc(p.text)} <span class="cite">[${p.cites.map(esc).join(", ")}]</span></p>`).join("")}<div class="muted">Provider ${esc(letter.provider)}${letter.model ? ", " + esc(letter.model) : ""}. Validator passed: every citation points at available evidence.</div></div>` : `<p class="muted">No letter yet. A validated letter marks the packet ready to submit.</p>`}
+  </section>
+  <section class="panel c5">
+    <h2>Lifecycle</h2>
+    <div class="actions">${nexts.length ? nexts.map((n) => `<button class="${n === "accepted" ? "ghost" : ""}" data-to="${n}">${esc(n.replace("_", " "))}</button>`).join("") : `<span class="muted">Closed: ${esc(st.status)}.</span>`}</div>
+    <div class="muted" style="margin-top:6px">Packet ready: ${st.packet_ready ? "yes" : "no"}. Representing needs a ready packet and an open deadline.</div>
+    <div id="tr-msg"></div>
+    <h2 style="margin-top:18px">Audit trail</h2>
+    <div class="scroll"><table><tr><th>When</th><th>Actor</th><th>Action</th><th>Note</th></tr>
+      ${d.audit.map((e) => `<tr><td>${esc(e.ts.replace("T", " "))}</td><td>${esc(e.actor)}</td><td>${esc(e.action)}${e.from_status && e.to_status ? ` to ${esc(e.to_status)}` : ""}</td><td class="wrap">${esc(e.note || "")}</td></tr>`).join("")}
+    </table></div>
+  </section>`;
+  const draft = async (provider) => {
+    try { await api(`/api/disputes/${encodeURIComponent(id)}/letter`, {method: "POST", body: JSON.stringify({provider})}); renderDispute(id); }
+    catch (e) { $("#letter-msg").innerHTML = `<div class="msg err">${esc(e.message)}${e.body && e.body.errors ? ": " + esc(e.body.errors.join("; ")) : ""}</div>`; }
+  };
+  $("#draft").onclick = () => draft("template");
+  $("#draft-claude").onclick = () => draft("claude");
+  document.querySelectorAll("button[data-to]").forEach((b) => b.onclick = async () => {
+    try { await api(`/api/disputes/${encodeURIComponent(id)}/transition`, {method: "POST", body: JSON.stringify({to: b.dataset.to})}); renderDispute(id); }
+    catch (e) { $("#tr-msg").innerHTML = `<div class="msg err">${esc(e.message)}</div>`; }
+  });
+}
+
+async function renderAnalytics() {
+  const a = await api("/api/analytics");
+  const t = a.totals, mon = a.monitor, ff = a.friendly_fraud;
+  const ms = mon.months;
+  const statusColor = (i) => ms[i].status === "breach" ? "--bad" : ms[i].status === "warning" ? "--warn" : "--s1";
+  const best = a.three_ds.reduce((b, r) => r.net_benefit > b.net_benefit ? r : b, a.three_ds[0]);
+  $("#app").innerHTML = `
+  <section class="panel c3 kpi"><div class="v">${num(t.transactions)}</div><div class="l">orders in the year (${money0(t.sales)})</div></section>
+  <section class="panel c3 kpi"><div class="v">${num(t.disputes)}</div><div class="l">disputes (${money0(t.disputed_amount)})</div></section>
+  <section class="panel c3 kpi"><div class="v">${pct(mon.latest.rate, 2)}</div><div class="l">latest monthly dispute rate (${esc(mon.latest.month)}) ${statusChipMon(mon.latest.status)}</div></section>
+  <section class="panel c3 kpi"><div class="v">${esc(mon.first_warning || "none")}</div><div class="l">first early warning, breach ${esc(mon.first_breach || "none")}</div></section>
+  <section class="panel c7">
+    <h2>Monthly dispute rate vs network threshold</h2>
+    ${legend([["Dispute rate (disputes / prior month sales)", "--s1"], ["Threshold " + pct(mon.threshold, 2), "--bad", 1], ["Early warning " + pct(mon.early_warning, 2), "--warn", 1]])}
+    ${lineChart({labels: ms.map((m) => m.month.slice(2)), series: [{values: ms.map((m) => m.rate), color: "--s1", pointColor: statusColor}], refs: [{value: mon.threshold, color: "--bad"}, {value: mon.early_warning, color: "--warn"}], fmt: (v) => pct(v, 2)})}
+    <p class="muted">Warning fires at the early warning level or when the three-month trend projects a breach next month. The August to October rise is a wave of festival ticket disputes.</p>
+  </section>
+  <section class="panel c5">
+    <h2>Disputes by reason</h2>
+    ${barChart({labels: a.by_reason.map((r) => SHORT_REASON[r.category]), series: [{name: "disputes", values: a.by_reason.map((r) => r.disputes), color: "--s4"}], fmt: num})}
+    <div class="scroll"><table><tr><th>Reason</th><th class="num">Disputes</th><th class="num">Amount</th></tr>
+    ${a.by_reason.map((r) => `<tr><td>${esc(r.label)}</td><td class="num">${num(r.disputes)}</td><td class="num">${money0(r.amount)}</td></tr>`).join("")}</table></div>
+  </section>
+  <section class="panel c6">
+    <h2>Dispute rate by product</h2>
+    ${barChart({labels: a.by_product.map((r) => r.product.replace("_", " ")), series: [{name: "rate", values: a.by_product.map((r) => r.rate), color: "--s3"}], fmt: (v) => pct(v, 1)})}
+  </section>
+  <section class="panel c6">
+    <h2>Dispute rate by channel</h2>
+    ${barChart({labels: a.by_channel.map((r) => r.channel), series: [{name: "rate", values: a.by_channel.map((r) => r.rate), color: "--s6"}], fmt: (v) => pct(v, 1)})}
+  </section>
+  <section class="panel c7">
+    <h2>Require 3-D Secure above a threshold: fraud prevented vs conversion cost</h2>
+    ${legend([["Dispute losses avoided", "--s2"], ["Margin lost to checkout abandonment", "--s5"]])}
+    ${barChart({labels: a.three_ds.map((r) => "$" + r.threshold), series: [{name: "avoided", values: a.three_ds.map((r) => r.dispute_losses_avoided), color: "--s2"}, {name: "lost margin", values: a.three_ds.map((r) => r.lost_margin), color: "--s5"}], fmt: money0})}
+    <p class="muted">Best threshold on this year: challenge orders of $${best.threshold} and up. It prevents ${pct(best.share_of_fraud_disputes, 0)} of fraud disputes for a net ${money0(best.net_benefit)}. Assumes 85% of challenged fraud is stopped and 3.5% of good customers abandon at the challenge.</p>
+  </section>
+  <section class="panel c5">
+    <h2>3-D Secure thresholds</h2>
+    <div class="scroll"><table><tr><th>Above</th><th class="num">Challenged</th><th class="num">Fraud prevented</th><th class="num">Net</th></tr>
+    ${a.three_ds.map((r) => `<tr><td>$${r.threshold}</td><td class="num">${num(r.challenged_orders)}</td><td class="num">${pct(r.share_of_fraud_disputes, 0)}</td><td class="num">${money0(r.net_benefit)}</td></tr>`).join("")}</table></div>
+  </section>
+  <section class="panel c12">
+    <h2>Friendly fraud: repeat disputers</h2>
+    <div class="kv">
+      <div>Customers with 2+ disputes</div><div>${num(ff.repeat_customers)}</div>
+      <div>Their disputes</div><div>${num(ff.disputes_from_repeat)} (${pct(ff.share_of_disputes)} of all disputes)</div>
+      <div>With proof of receipt</div><div>${pct(ff.share_with_proof_of_receipt)} had a venue scan or delivery confirmation before disputing</div>
+      <div>Win rate if fought</div><div>${pct(ff.win_rate_if_fought)}</div>
+    </div>
+  </section>`;
+}
+function statusChipMon(s) { return `<span class="chip ${s === "breach" ? "bad" : s === "warning" ? "warn" : "good"}">${esc(s)}</span>`; }
+
+async function renderPolicy() {
+  const [p, m] = await Promise.all([api("/api/policy"), api("/api/model")]);
+  const rows = p.policies, t = m.metrics.test;
+  const short = {fight_everything: "all", fight_nothing: "none", amount_over_75: "$75+", rule_of_thumb: "rule", model_ev: "model", oracle: "hindsight"};
+  $("#app").innerHTML = `
+  <section class="panel c12">
+    <h2>Fight policies on held-out disputes (received ${esc("2026-08-01")} onward, n = ${num(p.split.test)})</h2>
+    <div class="scroll"><table><tr><th>Policy</th><th class="num">Represented</th><th class="num">Won</th><th class="num">Win rate</th><th class="num">Recovered</th><th class="num">Costs</th><th class="num">Net recovered</th><th class="num">vs all</th></tr>
+    ${rows.map((r) => `<tr><td>${esc(r.label)}</td><td class="num">${num(r.fought)}</td><td class="num">${num(r.won)}</td><td class="num">${pct(r.win_rate)}</td><td class="num">${money0(r.recovered)}</td><td class="num">${money0(r.handling_cost + r.loss_fees)}</td><td class="num"><b>${money0(r.net)}</b></td><td class="num">${(r.vs_fight_everything >= 0 ? "+" : "") + money0(r.vs_fight_everything)}</td></tr>`).join("")}
+    </table></div>
+  </section>
+  <section class="panel c6">
+    <h2>Net recovered dollars by policy</h2>
+    ${barChart({labels: rows.map((r) => short[r.policy] || r.policy), series: [{name: "net", values: rows.map((r) => r.net), color: "--s1"}], fmt: money0})}
+  </section>
+  <section class="panel c6">
+    <h2>Calibration on the test months</h2>
+    ${legend([["Predicted", "--s1"], ["Observed win rate", "--s2"]])}
+    ${barChart({labels: t.calibration.map((b) => "bin " + b.bin), series: [{name: "predicted", values: t.calibration.map((b) => b.predicted), color: "--s1"}, {name: "observed", values: t.calibration.map((b) => b.observed), color: "--s2"}], fmt: (v) => pct(v, 0)})}
+    <p class="muted">AUC ${t.auc.toFixed(3)}, Brier ${t.brier.toFixed(3)}, expected calibration error ${pct(t.ece)} (${pct(t.ece_uncalibrated)} before Platt calibration).</p>
+  </section>
+  <section class="panel c12">
+    <h2>Net recovered by reason category</h2>
+    <div class="scroll"><table><tr><th>Reason</th><th class="num">Disputes</th><th class="num">Fight everything</th><th class="num">Rule of thumb</th><th class="num">Model</th><th class="num">Model represents</th></tr>
+    ${p.by_category.map((r) => `<tr><td>${esc(r.category.replaceAll("_", " "))}</td><td class="num">${num(r.n)}</td><td class="num">${money0(r.fight_everything)}</td><td class="num">${money0(r.rule_of_thumb)}</td><td class="num">${money0(r.model_ev)}</td><td class="num">${num(r.model_fought)}</td></tr>`).join("")}
+    </table></div>
+  </section>`;
+}
+
+async function route() {
+  const h = location.hash || "#/queue";
+  document.querySelectorAll("nav a").forEach((a) => a.classList.toggle("on", h.startsWith(a.getAttribute("href")) || (h.startsWith("#/dispute") && a.id === "nav-queue")));
+  try {
+    if (h.startsWith("#/dispute/")) await renderDispute(decodeURIComponent(h.slice(10)));
+    else if (h.startsWith("#/analytics")) await renderAnalytics();
+    else if (h.startsWith("#/policy")) await renderPolicy();
+    else await renderQueue();
+  } catch (e) {
+    $("#app").innerHTML = `<section class="panel c12"><div class="msg err">${esc(e.message)}</div></section>`;
+  }
+}
+window.addEventListener("hashchange", route);
+api("/healthz").then((h) => $("#today").textContent = "Today " + h.today).catch(() => {});
+route();
+</script>
+</body>
+</html>

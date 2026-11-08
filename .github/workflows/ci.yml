@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Lint
+        run: |
+          uvx ruff check .
+          uvx ruff format --check .
+      - name: Test
+        run: uv run --python 3.12 --group dev pytest -q
+
+  policy-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Full pipeline, then fail unless the model policy beats fight-everything on held-out disputes
+        run: uv run --python 3.12 disputedesk --data-dir data/ci all --gate
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: report
+          path: data/ci/report.json
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t dispute-desk:ci .
+      - name: Pipeline job then API smoke test
+        run: |
+          docker volume create deskdata
+          docker run --rm -v deskdata:/app/data dispute-desk:ci disputedesk all --txns 120000 --customers 36000
+          docker run -d --name desk -p 8833:8833 -v deskdata:/app/data dispute-desk:ci
+          for i in $(seq 1 30); do curl -sf http://localhost:8833/healthz && break; sleep 1; done
+          curl -sf "http://localhost:8833/api/queue?limit=3"
+          curl -sf http://localhost:8833/metrics | grep dd_dispute_rate_threshold
+          docker rm -f desk

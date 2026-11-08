@@ -1,0 +1,18 @@
+# Two processes: a one-shot batch job builds the data and model, then the API serves it.
+services:
+  pipeline:
+    build: .
+    command: ["disputedesk", "all"]
+    volumes: ["deskdata:/app/data"]
+  api:
+    build: .
+    depends_on:
+      pipeline:
+        condition: service_completed_successfully
+    ports: ["8833:8833"]
+    environment:
+      DISPUTEDESK_LETTER_PROVIDER: template
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    volumes: ["deskdata:/app/data"]
+volumes:
+  deskdata:
